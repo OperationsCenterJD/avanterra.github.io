@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Avanterra Links</title>
+</head>
+<body style="font-family: system-ui; max-width: 720px; margin: 40px auto; padding: 0 16px;">
+  <h1>Crear enlace</h1>
+
+  <label>Título<br><input id="title" style="width:100%"></label><br><br>
+  <label>Descripción<br><input id="desc" style="width:100%"></label><br><br>
+  <label>Imagen (URL)<br><input id="img" style="width:100%" placeholder="https://..."></label><br><br>
+  <label>Slug<br><input id="slug" style="width:100%" placeholder="CarlosPlazaPintadoEssentials"></label><br><br>
+  <label>Destino (Highspot URL)<br><input id="target" style="width:100%" placeholder="https://view.highspot.com/..."></label><br><br>
+
+  <button id="btn">Crear</button>
+  <p id="status"></p>
+  <p id="result"></p>
+
+  <script>
+    // Pon aquí la URL de tu backend desplegado:
+    const API_BASE = "https://TU-BACKEND.example.com";
+    // Clave simple para MVP (mejorable luego):
+    const ADMIN_KEY = prompt("Clave");
+
+    const $ = (id) => document.getElementById(id);
+
+    $("btn").onclick = async () => {
+      $("status").textContent = "Creando...";
+      $("result").textContent = "";
+
+      const payload = {
+        title: $("title").value,
+        description: $("desc").value,
+        image: $("img").value,
+        slug: $("slug").value,
+        targetUrl: $("target").value
+      };
+
+      try {
+        const res = await fetch(`${API_BASE}/api/links`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Admin-Key": ADMIN_KEY
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || "Error");
+
+        $("status").textContent = "✅ Creado";
+        $("result").innerHTML = `
+          <a href="${data.publicUrl}" target="_blank">${data.publicUrl}</a>
+          <button id="copy">Copiar</button>
+        `;
+        document.getElementById("copy").onclick = async () => {
+          await navigator.clipboard.writeText(data.publicUrl);
+        };
+      } catch (e) {
+        $("status").textContent = "❌ " + e.message;
+      }
+    };
+  </script>
+</body>
+</html>
